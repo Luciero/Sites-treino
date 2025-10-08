@@ -1,12 +1,17 @@
-from flask import Flask, render_template, request, url_for
-
+from flask import Flask, render_template, request, url_for, flash, redirect
+from forms import FormLogin, FormCriarConta
+from flask_sqlalchemy import SQLAlchemy
 
 app = Flask(__name__)
 
+
 lista_usuarios = ['Pedro','João','Maria','Mauro']
 
-
 app.config['SECRET_KEY'] = 'adca60707f946de523ded83a1cf470a5'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///comunidade.db'
+
+database = SQLAlchemy(app)
+
 
 @app.route('/')
 def home():
@@ -22,14 +27,21 @@ def contato():
 def usuarios():
     return render_template('usuarios.html',lista_usuarios=lista_usuarios)
 
-@app.route('/login')
+
+@app.route('/login', methods=['GET', 'POST'])
 def login():
-    return render_template('login.html')
+    form_login = FormLogin()
+    form_criarconta = FormCriarConta()
 
+    if form_login.validate_on_submit() and 'botao_submit_login' in request.form:
+        flash(f'Login feito com sucesso no e-mail: {form_login.email.data}', 'alert-success')
+        return redirect(url_for('home'))
 
-@app.route('/criar_conta')
-def criar_conta():
-    return render_template('criar_conta.html')
+    if form_criarconta.validate_on_submit() and 'botao_submit_criarconta' in request.form:
+        flash(f'Conta criada com sucesso no e-mail: {form_criarconta.email.data}', 'alert-success' )
+        return redirect(url_for('home'))
+    return render_template('login.html', form_login = form_login, form_criarconta = form_criarconta)
+
 
 
 if __name__ == '__main__':
